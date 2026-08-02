@@ -51,7 +51,7 @@ export function Game3() {
   const [activeGreeting, setActiveGreeting] = useState<any>(null);
   const [showGreetingsMenu, setShowGreetingsMenu] = useState(false);
 
-  const isHost = matchData?.hostUid === user?.uid;
+  const isHost = matchData?.hostUid === profile?.uid;
   
   useEffect(() => {
     if (!matchId) return;
@@ -159,14 +159,14 @@ export function Game3() {
   }, [matchData, isMultiplayer, isHost, matchId]);
 
   const joinMatch = async (id: string) => {
-    if (!profile || !user) return;
+    if (!profile) return;
     const matchRef = doc(db, 'game3_matches', id);
     const snap = await getDoc(matchRef);
     if (snap.exists()) {
       const data = snap.data();
-      if (data.status === 'pending' && data.hostUid !== user.uid) {
+      if (data.status === 'pending' && data.hostUid !== profile.uid) {
         await updateDoc(matchRef, {
-          guestUid: user.uid,
+          guestUid: profile.uid,
           guestName: profile.displayName,
           guestAvatar: profile.avatar,
           status: 'playing'
@@ -176,13 +176,13 @@ export function Game3() {
   };
 
   const createChallenge = async () => {
-    if (!profile || !user) return;
+    if (!profile) return;
     setWaitingForOpponent(true);
     setIsMultiplayer(true);
     
     const newMatchRef = collection(db, 'game3_matches');
     const docRef = await addDoc(newMatchRef, {
-      hostUid: user.uid,
+      hostUid: profile.uid,
       hostName: profile.displayName,
       hostAvatar: profile.avatar,
       guestUid: null,
@@ -278,9 +278,9 @@ export function Game3() {
     }
 
     if (profile) {
-      if (user) {
+      if (profile) {
         await addDoc(collection(db, 'scores'), {
-          userId: user.uid,
+          userId: profile.uid,
           userName: profile.displayName,
           userAvatar: profile.avatar,
           gameId: 'game3',
@@ -301,20 +301,20 @@ export function Game3() {
 
   const sendGreeting = async (text: string) => {
     setShowGreetingsMenu(false);
-    if (!user) return;
+    if (!profile) return;
     
     if (isMultiplayer && matchId) {
       await updateDoc(doc(db, 'game3_matches', matchId), {
         lastGreeting: {
           text,
-          senderId: user.uid,
+          senderId: profile.uid,
           timestamp: Date.now()
         }
       });
     } else {
       setActiveGreeting({
         text,
-        senderId: user.uid,
+        senderId: profile.uid,
         timestamp: Date.now()
       });
       setTimeout(() => setActiveGreeting(null), 3000);
@@ -355,7 +355,7 @@ export function Game3() {
               </div>
               <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
                 <Button onClick={startGameSingle} variant="ghost" size="lg" className="w-full sm:w-auto bg-blue-800 text-white hover:bg-blue-700">Jugar contra Neptuno (IA)</Button>
-                {user && <Button onClick={createChallenge} variant="primary" size="lg" className="w-full sm:w-auto">¡Retar a Todos!</Button>}
+                {profile && <Button onClick={createChallenge} variant="primary" size="lg" className="w-full sm:w-auto">¡Retar a Todos!</Button>}
               </div>
             </div>
           ) : waitingForOpponent ? (
@@ -403,7 +403,7 @@ export function Game3() {
                      initial={{ opacity: 0, y: -20, scale: 0.8 }} 
                      animate={{ opacity: 1, y: 0, scale: 1 }} 
                      exit={{ opacity: 0, scale: 0.8 }}
-                     className={`absolute top-16 z-10 bg-yellow-400 text-indigo-900 font-bold px-4 py-2 rounded-2xl shadow-lg border-2 border-white ${activeGreeting.senderId === user?.uid ? 'left-4' : 'right-4'}`}
+                     className={`absolute top-16 z-10 bg-yellow-400 text-indigo-900 font-bold px-4 py-2 rounded-2xl shadow-lg border-2 border-white ${activeGreeting.senderId === profile?.uid ? 'left-4' : 'right-4'}`}
                   >
                     {activeGreeting.text}
                   </motion.div>

@@ -80,7 +80,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       createdAt: Date.now(),
       isGuest: true
     };
+    
+    // Save to local storage
     localStorage.setItem('guestProfile', JSON.stringify(newProfile));
+    
+    // Attempt to save to firestore so they show on leaderboard (relies on updated public rules)
+    try {
+      await setDoc(doc(db, 'users', newProfile.uid), newProfile);
+    } catch (err) {
+      console.warn("Could not save guest to firestore", err);
+    }
+    
     setProfile(newProfile);
   };
 
@@ -112,6 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } else {
       localStorage.setItem('guestProfile', JSON.stringify(updatedProfile));
+      try {
+        await updateDoc(doc(db, 'users', profile.uid), {
+          totalPoints: newTotalPoints,
+          gamesCompleted: newGamesCompleted
+        });
+      } catch(e) {}
     }
     
     setProfile(updatedProfile);
@@ -133,6 +149,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } else {
       localStorage.setItem('guestProfile', JSON.stringify(updatedProfile));
+      try {
+        await updateDoc(doc(db, 'users', profile.uid), {
+          medals: newMedals
+        });
+      } catch (e) {}
     }
 
     setProfile(updatedProfile);

@@ -106,9 +106,9 @@ export function Game2() {
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
 
       if (profile) {
-        if (user) {
+        if (profile) {
           await addDoc(collection(db, 'scores'), {
-            userId: user.uid,
+            userId: profile.uid,
             userName: profile.displayName,
             userAvatar: profile.avatar,
             gameId: 'game2',

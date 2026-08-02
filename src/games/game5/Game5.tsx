@@ -124,9 +124,9 @@ export function Game5() {
     }
 
     if (profile) {
-      if (user) {
+      if (profile) {
         await addDoc(collection(db, 'scores'), {
-          userId: user.uid,
+          userId: profile.uid,
           userName: profile.displayName,
           userAvatar: profile.avatar,
           gameId: 'game5',

@@ -17,12 +17,16 @@ export function Login() {
   const [age, setAge] = useState(7);
   const [color, setColor] = useState('Azul');
 
+  const [errorMsg, setErrorMsg] = useState('');
+
   const handleGoogleLogin = async () => {
     try {
+      setErrorMsg('');
       await loginWithGoogle();
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      setErrorMsg('Error al iniciar sesión con Google. Si estás en GitHub Pages, debes agregar este dominio a la lista de "Dominios autorizados" en la consola de Firebase Authentication. Detalles: ' + error.message);
     }
   };
 
@@ -46,7 +50,7 @@ export function Login() {
             <p className="text-slate-500 font-medium">Crea tu pase VIP submarino</p>
           </div>
 
-          {!isGuestForm ? (
+          {errorMsg && (<div className="mb-6 p-4 bg-red-100 border-2 border-red-400 text-red-700 rounded-xl font-bold text-sm">{errorMsg}</div>)}{!isGuestForm ? (
             <div className="space-y-4">
               <Button onClick={handleGoogleLogin} variant="secondary" className="w-full text-lg h-14">
                 🚀 Entrar con Google
