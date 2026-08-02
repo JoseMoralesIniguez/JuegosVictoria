@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router';
+import { HashRouter, Routes, Route } from 'react-router';
 import { AuthProvider } from './contexts/AuthContext';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
@@ -21,7 +21,7 @@ import { Game5 } from './games/game5/Game5';
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -33,7 +33,7 @@ export default function App() {
           <Route path="/game4" element={<Game4 />} />
           <Route path="/game5" element={<Game5 />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   );
 }
