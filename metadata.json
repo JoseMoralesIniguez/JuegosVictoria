@@ -1,0 +1,6 @@
+{
+  "name": "Fiesta Marina de Victoria",
+  "description": "Una plataforma web temática para celebrar el cumpleaños número 7 de Victoria con 5 minijuegos submarinos y ranking global.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

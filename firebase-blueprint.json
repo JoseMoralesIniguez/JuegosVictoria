@@ -1,0 +1,48 @@
+{
+  "rulesVersion": "2",
+  "collections": [
+    {
+      "name": "users",
+      "path": "users/{userId}",
+      "schema": {
+        "properties": {
+          "uid": { "type": "string" },
+          "displayName": { "type": "string" },
+          "avatar": { "type": "string" },
+          "age": { "type": "number" },
+          "favoriteColor": { "type": "string" },
+          "totalPoints": { "type": "number" },
+          "gamesCompleted": { "type": "number" },
+          "medals": { "type": "list", "items": { "type": "string" } },
+          "createdAt": { "type": "timestamp" },
+          "isGuest": { "type": "boolean" }
+        },
+        "required": ["uid", "displayName"]
+      },
+      "permissions": {
+        "read": "request.auth != null",
+        "create": "request.auth != null && request.auth.uid == userId",
+        "update": "request.auth != null && request.auth.uid == userId"
+      }
+    },
+    {
+      "name": "scores",
+      "path": "scores/{scoreId}",
+      "schema": {
+        "properties": {
+          "userId": { "type": "string" },
+          "userName": { "type": "string" },
+          "userAvatar": { "type": "string" },
+          "gameId": { "type": "string" },
+          "score": { "type": "number" },
+          "createdAt": { "type": "timestamp" }
+        },
+        "required": ["userId", "userName", "gameId", "score"]
+      },
+      "permissions": {
+        "read": "request.auth != null",
+        "create": "request.auth != null && request.auth.uid == request.resource.data.userId"
+      }
+    }
+  ]
+}
