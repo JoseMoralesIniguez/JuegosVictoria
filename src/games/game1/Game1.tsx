@@ -99,7 +99,7 @@ export function Game1() {
     
     // Save score
     if (profile) {
-      await addDoc(collection(db, 'scores'), {
+      addDoc(collection(db, 'scores'), {
         userId: profile.uid,
         userName: profile.displayName,
         userAvatar: profile.avatar,

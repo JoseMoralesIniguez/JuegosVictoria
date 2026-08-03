@@ -34,10 +34,12 @@ export function Login() {
     e.preventDefault();
     if (!name) return;
     try {
+      setErrorMsg('');
       await loginAsGuest(name, avatar, age, color);
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      setErrorMsg('Error al crear invitado: ' + error.message);
     }
   };
 

@@ -181,7 +181,7 @@ export function Game3() {
     setIsMultiplayer(true);
     
     const newMatchRef = collection(db, 'game3_matches');
-    const docRef = await addDoc(newMatchRef, {
+    const docRef = addDoc(newMatchRef, {
       hostUid: profile.uid,
       hostName: profile.displayName,
       hostAvatar: profile.avatar,
@@ -279,7 +279,7 @@ export function Game3() {
 
     if (profile) {
       if (profile) {
-        await addDoc(collection(db, 'scores'), {
+        addDoc(collection(db, 'scores'), {
           userId: profile.uid,
           userName: profile.displayName,
           userAvatar: profile.avatar,

@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Attempt to save to firestore so they show on leaderboard (relies on updated public rules)
     try {
-      await setDoc(doc(db, 'users', newProfile.uid), newProfile);
+      setDoc(doc(db, 'users', newProfile.uid), newProfile);
     } catch (err) {
       console.warn("Could not save guest to firestore", err);
     }
@@ -116,14 +116,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     if (user) {
-      await updateDoc(doc(db, 'users', user.uid), {
+      updateDoc(doc(db, 'users', user.uid), {
         totalPoints: newTotalPoints,
         gamesCompleted: newGamesCompleted
       });
     } else {
       localStorage.setItem('guestProfile', JSON.stringify(updatedProfile));
       try {
-        await updateDoc(doc(db, 'users', profile.uid), {
+        updateDoc(doc(db, 'users', profile.uid), {
           totalPoints: newTotalPoints,
           gamesCompleted: newGamesCompleted
         });
@@ -144,13 +144,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     if (user) {
-      await updateDoc(doc(db, 'users', user.uid), {
+      updateDoc(doc(db, 'users', user.uid), {
         medals: newMedals
       });
     } else {
       localStorage.setItem('guestProfile', JSON.stringify(updatedProfile));
       try {
-        await updateDoc(doc(db, 'users', profile.uid), {
+        updateDoc(doc(db, 'users', profile.uid), {
           medals: newMedals
         });
       } catch (e) {}
