@@ -1,16 +1,36 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { GAMES } from '../types';
-import { Link } from 'react-router';
-import { Play, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
+import { Play, Sparkles, Trophy, Star } from 'lucide-react';
 import * as motion from 'motion/react-client';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Home() {
+  const { profile, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !profile) {
+      navigate('/login');
+    }
+  }, [profile, loading, navigate]);
+
+  if (loading || !profile) {
+    return (
+      <PageContainer>
+        <div className="flex justify-center items-center h-64 text-white font-bold text-2xl">
+          Cargando...
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
-      <div className="text-center mb-12">
+      <div className="text-center mb-8">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -18,15 +38,44 @@ export function Home() {
           className="inline-block relative"
         >
           <div className="absolute -inset-4 bg-yellow-300/30 blur-xl rounded-full"></div>
-          <h1 className="relative text-5xl md:text-7xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)] mb-4 leading-tight">
+          <h1 className="relative text-4xl md:text-6xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)] mb-2 leading-tight">
             ¡Feliz 7mo<br/>Cumpleaños<br/>Victoria!
           </h1>
           <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-yellow-300 animate-spin-slow" style={{ animationDuration: '4s' }} />
         </motion.div>
-        <p className="text-xl text-cyan-50 font-medium max-w-2xl mx-auto drop-shadow-md">
-          Bienvenido a la fiesta marina más divertida. ¡Juega, gana medallas y compite con tus amigos!
-        </p>
       </div>
+
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }} 
+        animate={{ y: 0, opacity: 1 }}
+        className="max-w-3xl mx-auto mb-12 bg-white/20 backdrop-blur-lg rounded-[30px] border-4 border-white/30 p-6 shadow-xl flex flex-col md:flex-row items-center gap-6"
+      >
+        <div className="text-7xl bg-white/50 w-24 h-24 rounded-full flex items-center justify-center border-4 border-white shadow-inner">
+          {profile.avatar}
+        </div>
+        <div className="text-center md:text-left flex-grow text-white">
+          <h2 className="text-3xl font-black mb-1 drop-shadow-sm">¡Hola, {profile.displayName}!</h2>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 font-bold">
+            <div className="flex items-center gap-1 bg-yellow-400/20 px-3 py-1 rounded-full border border-yellow-300/50">
+              <Star className="w-4 h-4 text-yellow-300" />
+              <span>{profile.totalPoints} Puntos</span>
+            </div>
+            <div className="flex items-center gap-1 bg-cyan-400/20 px-3 py-1 rounded-full border border-cyan-300/50">
+              <Trophy className="w-4 h-4 text-cyan-300" />
+              <span>{profile.gamesCompleted} Juegos</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 flex-wrap justify-center">
+          {profile.medals.length > 0 ? (
+            profile.medals.map(medal => (
+              <div key={medal} className="text-3xl" title={medal}>🏅</div>
+            ))
+          ) : (
+            <div className="text-white/60 font-bold text-sm text-center">¡Juega para<br/>ganar medallas!</div>
+          )}
+        </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {GAMES.map((game, index) => {
@@ -38,7 +87,7 @@ export function Home() {
             rose: { border: 'border-rose-300', bg: 'bg-rose-100', text: 'text-rose-600', tagBorder: 'border-rose-200', btnBg: 'bg-rose-400', btnBorder: 'border-rose-600' }
           };
           const t = themes[game.theme as string] || themes.cyan;
-
+          
           return (
             <motion.div
               key={game.id}

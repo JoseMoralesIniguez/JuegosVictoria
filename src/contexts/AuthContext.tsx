@@ -1,16 +1,14 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../lib/firebase';
-import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { db } from '../lib/firebase';
+import { doc, getDoc, setDoc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import { UserProfile } from '../types';
 
 interface AuthContextType {
-  user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  loginWithGoogle: () => Promise<void>;
-  loginAsGuest: (name: string, avatar: string, age: number, color: string) => Promise<void>;
-  logout: () => Promise<void>;
+  login: (username: string, pin: string) => Promise<void>;
+  register: (username: string, pin: string, avatar: string, age: number, color: string) => Promise<void>;
+  logout: () => void;
   updateProfilePoints: (points: number, gameCompleted: boolean) => Promise<void>;
   addMedal: (medal: string) => Promise<void>;
 }
@@ -18,59 +16,68 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const profileRef = useRef<UserProfile | null>(null);
+  
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const docRef = doc(db, 'users', currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setProfile(docSnap.data() as UserProfile);
-        } else {
-          // Auto create profile for google users
-          const newProfile: UserProfile = {
-            uid: currentUser.uid,
-            displayName: currentUser.displayName || 'Capitán Marino',
-            avatar: '🦈',
-            age: 7,
-            favoriteColor: 'Azul',
-            totalPoints: 0,
-            gamesCompleted: 0,
-            medals: [],
-            createdAt: Date.now(),
-            isGuest: false
-          };
-          await setDoc(docRef, newProfile);
-          setProfile(newProfile);
-        }
-      } else {
-        // Check for guest in local storage
-        const storedGuest = localStorage.getItem('guestProfile');
-        if (storedGuest) {
-          setProfile(JSON.parse(storedGuest));
-        } else {
-          setProfile(null);
+    const loadSession = async () => {
+      const storedUid = localStorage.getItem('userUid');
+      if (storedUid) {
+        try {
+          const docRef = doc(db, 'users', storedUid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setProfile(docSnap.data() as UserProfile);
+          } else {
+            localStorage.removeItem('userUid');
+          }
+        } catch (e) {
+          console.error("Error loading profile", e);
         }
       }
       setLoading(false);
-    });
-
-    return () => unsubscribe();
+    };
+    loadSession();
   }, []);
 
-  const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+  const login = async (username: string, pin: string) => {
+    const uid = username.toLowerCase().trim();
+    const docRef = doc(db, 'users', uid);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.pin !== pin) {
+        throw new Error("Contraseña incorrecta");
+      }
+      setProfile(data as UserProfile);
+      localStorage.setItem('userUid', uid);
+    } else {
+      throw new Error("El usuario no existe");
+    }
   };
 
-  const loginAsGuest = async (name: string, avatar: string, age: number, color: string) => {
+  const register = async (username: string, pin: string, avatar: string, age: number, color: string) => {
+    const uid = username.toLowerCase().trim();
+    if (!uid || !pin) throw new Error("Faltan datos");
+    
+    const docRef = doc(db, 'users', uid);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      throw new Error("El nombre de usuario ya está en uso. ¡Elige otro!");
+    }
+    
     const newProfile: UserProfile = {
-      uid: 'guest_' + Date.now(),
-      displayName: name,
+      uid,
+      displayName: username.trim(),
+      pin, // In a real app we'd hash this, but it's a kids game
       avatar,
       age,
       favoriteColor: color,
@@ -78,89 +85,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       gamesCompleted: 0,
       medals: [],
       createdAt: Date.now(),
-      isGuest: true
+      isGuest: false
     };
     
-    // Save to local storage
-    localStorage.setItem('guestProfile', JSON.stringify(newProfile));
-    
-    // Attempt to save to firestore so they show on leaderboard (relies on updated public rules)
-    try {
-      setDoc(doc(db, 'users', newProfile.uid), newProfile);
-    } catch (err) {
-      console.warn("Could not save guest to firestore", err);
-    }
-    
+    await setDoc(docRef, newProfile);
     setProfile(newProfile);
+    localStorage.setItem('userUid', uid);
   };
 
-  const logout = async () => {
-    if (user) {
-      await signOut(auth);
-    } else {
-      localStorage.removeItem('guestProfile');
-      setProfile(null);
-    }
+  const logout = () => {
+    localStorage.removeItem('userUid');
+    setProfile(null);
   };
 
   const updateProfilePoints = async (points: number, gameCompleted: boolean) => {
-    if (!profile) return;
+    const currentUid = profileRef.current?.uid;
+    if (!currentUid) return;
     
-    const newTotalPoints = profile.totalPoints + points;
-    const newGamesCompleted = profile.gamesCompleted + (gameCompleted ? 1 : 0);
-    
-    const updatedProfile = {
-      ...profile,
-      totalPoints: newTotalPoints,
-      gamesCompleted: newGamesCompleted
-    };
+    // Update local state robustly
+    setProfile(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        totalPoints: prev.totalPoints + points,
+        gamesCompleted: prev.gamesCompleted + (gameCompleted ? 1 : 0)
+      };
+    });
 
-    if (user) {
-      updateDoc(doc(db, 'users', user.uid), {
-        totalPoints: newTotalPoints,
-        gamesCompleted: newGamesCompleted
+    // Update firestore robustly
+    try {
+      await updateDoc(doc(db, 'users', currentUid), {
+        totalPoints: increment(points),
+        gamesCompleted: increment(gameCompleted ? 1 : 0)
       });
-    } else {
-      localStorage.setItem('guestProfile', JSON.stringify(updatedProfile));
-      try {
-        updateDoc(doc(db, 'users', profile.uid), {
-          totalPoints: newTotalPoints,
-          gamesCompleted: newGamesCompleted
-        });
-      } catch(e) {}
+    } catch(e) {
+      console.error(e);
     }
-    
-    setProfile(updatedProfile);
   };
 
   const addMedal = async (medal: string) => {
-    if (!profile) return;
-    if (profile.medals.includes(medal)) return;
+    const currentUid = profileRef.current?.uid;
+    if (!currentUid) return;
+    
+    // Check if we already have it in ref to avoid unnecessary writes
+    if (profileRef.current?.medals.includes(medal)) return;
 
-    const newMedals = [...profile.medals, medal];
-    const updatedProfile = {
-      ...profile,
-      medals: newMedals
-    };
+    // Update local state robustly
+    setProfile(prev => {
+      if (!prev) return prev;
+      if (prev.medals.includes(medal)) return prev;
+      return {
+        ...prev,
+        medals: [...prev.medals, medal]
+      };
+    });
 
-    if (user) {
-      updateDoc(doc(db, 'users', user.uid), {
-        medals: newMedals
+    // We can't easily arrayUnion with increment without arrayUnion function,
+    // so let's import arrayUnion
+    try {
+      await updateDoc(doc(db, 'users', currentUid), {
+        medals: arrayUnion(medal)
       });
-    } else {
-      localStorage.setItem('guestProfile', JSON.stringify(updatedProfile));
-      try {
-        updateDoc(doc(db, 'users', profile.uid), {
-          medals: newMedals
-        });
-      } catch (e) {}
+    } catch (e) {
+      console.error(e);
     }
-
-    setProfile(updatedProfile);
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, loginWithGoogle, loginAsGuest, logout, updateProfilePoints, addMedal }}>
+    <AuthContext.Provider value={{ profile, loading, login, register, logout, updateProfilePoints, addMedal }}>
       {children}
     </AuthContext.Provider>
   );
