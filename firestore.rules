@@ -1,8 +1,30 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+    
+    match /auth_credentials/{userId} {
+      // Permitir leer un documento específico (para el login), pero no listar todos
+      allow get: if true;
+      allow list: if false;
+      // Solo permitir crear si no existe (no sobrescribir)
+      allow create: if !exists(/databases/$(database)/documents/auth_credentials/$(userId));
+      allow update, delete: if false;
+    }
+
+    match /users/{userId} {
+      // Cualquiera puede leer los perfiles para el ranking
+      allow read: if true;
+      // Solo permitir crear si no existe
+      allow create: if !exists(/databases/$(database)/documents/users/$(userId));
+      // Permitir actualizaciones, pero solo de puntos, juegos y medallas
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalPoints', 'gamesCompleted', 'medals']);
+      allow delete: if false;
+    }
+
+    match /scores/{scoreId} {
+      // Cualquier persona puede ver y crear puntajes para el ranking
+      allow read, create: if true;
+      allow update, delete: if false;
     }
   }
 }

@@ -8,7 +8,6 @@ export interface UserProfile {
   gamesCompleted: number;
   medals: string[];
   createdAt: number;
-  pin?: string;
   isGuest: boolean;
 }
 

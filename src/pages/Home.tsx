@@ -50,7 +50,7 @@ export function Home() {
         animate={{ y: 0, opacity: 1 }}
         className="max-w-3xl mx-auto mb-12 bg-white/20 backdrop-blur-lg rounded-[30px] border-4 border-white/30 p-6 shadow-xl flex flex-col md:flex-row items-center gap-6"
       >
-        <div className="text-7xl bg-white/50 w-24 h-24 rounded-full flex items-center justify-center border-4 border-white shadow-inner">
+        <div className="text-7xl bg-white/50 w-24 h-24 rounded-full flex items-center justify-center border-4 border-white shadow-inner shrink-0">
           {profile.avatar}
         </div>
         <div className="text-center md:text-left flex-grow text-white">

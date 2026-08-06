@@ -72,7 +72,7 @@ export function Leaderboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex overflow-x-auto gap-2 pb-4 mb-4 hide-scrollbar snap-x">
+        <div className="flex flex-nowrap overflow-x-auto gap-2 pb-4 mb-4 hide-scrollbar snap-x w-full">
           <button
             onClick={() => setActiveTab('global')}
             className={`snap-center shrink-0 px-6 py-3 rounded-full font-black text-sm uppercase tracking-wider transition-all ${
@@ -130,13 +130,13 @@ export function Leaderboard() {
                       <div className="w-12 h-12 bg-white/50 rounded-full flex items-center justify-center text-3xl">
                         {user.avatar}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className={`font-bold ${index === 2 ? 'text-white' : 'text-slate-800'} truncate text-lg`}>{user.displayName}</div>
                         <div className={`text-[10px] uppercase font-bold ${index === 2 ? 'text-amber-200' : 'text-slate-500'} flex items-center gap-1`}>
                           <Medal className="w-3 h-3" /> {user.gamesCompleted} juegos
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <span className={`font-black text-2xl ${index === 2 ? 'text-white' : 'text-slate-800'}`}>{user.totalPoints}</span>
                         <div className={`text-[10px] uppercase font-bold ${index === 2 ? 'text-amber-200' : 'text-slate-500'}`}>pts</div>
                       </div>
@@ -170,13 +170,13 @@ export function Leaderboard() {
                       <div className="w-12 h-12 bg-white/50 rounded-full flex items-center justify-center text-3xl">
                         {scoreEntry.userAvatar || '👤'}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className={`font-bold ${index === 2 ? 'text-white' : 'text-slate-800'} truncate text-lg`}>{scoreEntry.userName}</div>
                         <div className={`text-[10px] uppercase font-bold ${index === 2 ? 'text-amber-200' : 'text-slate-500'} flex items-center gap-1`}>
                           Puntuación Máxima
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <span className={`font-black text-2xl ${index === 2 ? 'text-white' : 'text-slate-800'}`}>{scoreEntry.score}</span>
                         <div className={`text-[10px] uppercase font-bold ${index === 2 ? 'text-amber-200' : 'text-slate-500'}`}>pts</div>
                       </div>

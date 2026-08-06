@@ -135,7 +135,7 @@ export function Login() {
               
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Elige tu Avatar</label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="flex flex-wrap justify-center gap-2">
                   {AVATARS.map(a => (
                     <button
                       key={a}
